@@ -1,0 +1,100 @@
+version: '3'
+
+# Описание Docker контейнеров
+services:
+  
+  # Контейнер с работающим ботом
+  app:
+    image: python:3.9.2
+    container_name: deribit-bot-app
+    working_dir: /home/app
+    environment:
+      IS_DOCKER_CONTAINER: 1
+    command: bash -c "pip install poetry && cd /home/app && poetry install && poetry run start-app"
+    volumes:
+      - ./app/app.py:/home/app/app.py:ro
+      - ./app/pyproject.toml:/home/app/pyproject.toml:ro
+      - ./docker-compose.yml:/home/app/docker-cfg.yml:ro
+    depends_on:
+      - db
+
+  # Контейнер с MySQL
+  db:
+    image: mysql:8.0.23
+    container_name: deribit-bot-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: &mysql-rootpsw roothardpassword009911
+      MYSQL_DATABASE: derebit_bot
+      LANG: C.UTF-8
+    command: ["--default-authentication-plugin=mysql_native_password", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    ports:
+      - 3310:3306
+    volumes:
+      - ./db/init-scripts:/docker-entrypoint-initdb.d
+      - ./db/data:/var/lib/mysql
+
+# Секция хранящая настройки самого бота
+# Описание настроек см.: https://github.com/n-eliseev/deribitsimplebot/
+# По сути содержимое файла config.yaml
+# Образец конфига с описанием: https://github.com/n-eliseev/deribitsimplebot/blob/master/example-app/config.yaml
+x-app:
+  
+  bot:
+    url: wss://test.deribit.com/ws/api/v2
+    order_label: dsb
+    logger: derebit_bot
+    auth:
+      grant_type: client_credentials
+      client_id: 
+      client_secret: 
+    instrument:
+      default:
+        gap: 100.0
+        gap_ignore: 50.0
+        price_id: mark_price
+        amount: 10
+      btc-perpetual:
+      eth-perpetual:
+
+  synch:
+    mod: 1
+    actual: True
+
+  db: &db-bot-cred
+    user: root
+    password: *mysql-rootpsw
+    host: 'db'
+    database: 'derebit_bot'
+    charset: 'utf8mb4'
+    port: 3306
+
+  logging:
+    version: 1
+
+    formatters:
+      simple:
+        format: '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
+
+    handlers:
+      console:
+        class: 'logging.StreamHandler'
+        level: 'INFO'
+        formatter: 'simple'
+        stream: 'ext://sys.stdout'
+      file:
+        class: 'logging.FileHandler'
+        level: 'WARNING'
+        filename: 'bot_log.log'
+      mysqldb:
+        class: 'deribitsimplebot.db.CLogMySQLHandler'
+        level: 'INFO'
+        <<: *db-bot-cred
+
+    loggers:
+      derebit_bot:
+        handlers: [mysqldb, file]
+
+    root:
+      level: 'INFO'
+      handlers: [console,file]

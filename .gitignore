@@ -1,0 +1,10 @@
+.cache
+.backup
+.vscode
+__pycache__
+*.lock
+*.log
+*.code-workspace
+*.local.*
+db/data/*
+!db/data/.gitkeep

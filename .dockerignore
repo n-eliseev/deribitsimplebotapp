@@ -1,0 +1,6 @@
+.git
+.cache
+.backup
+__pycache__
+.lock
+.log

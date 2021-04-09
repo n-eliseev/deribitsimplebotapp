@@ -7,7 +7,7 @@ authors = ["Eliseev Nikolay <n.a.eliseev@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 pandas = "^1.2"
-deribitsimplebot = "^0.2.2"
+deribitsimplebot = "^0.2.3"
 
 [tool.poetry.scripts]
 start-test = "unittest_example:main"

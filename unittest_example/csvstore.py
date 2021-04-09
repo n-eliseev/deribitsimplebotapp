@@ -7,14 +7,18 @@ from deribitsimplebot.interface import IBotStore
 
 class CSVBotStroe(IBotStore):
 
-    def __init__(self, file:str, data:pd.DataFrame = None, save_param:dict = None,**pandas_param_read):
+    def __init__(self, file: str, data: pd.DataFrame = None,
+                save_param:dict = None,**pandas_param_read):
         super().__init__()
-        
+
         self.file = file
         self.save_param = save_param
-        
-        self.df = (data if not (data is None) else pd.read_csv(file, delimiter=';', **pandas_param_read))
-        
+
+        self.df = (data
+                    if not data is None
+                    else pd.read_csv(file, delimiter=';', **pandas_param_read)
+                )
+
         self.df = (
             self.df.set_index(
                 self.df['id']
@@ -31,13 +35,14 @@ class CSVBotStroe(IBotStore):
                 'update':'datetime64'
             })
 
-    def get(self, id:Union[int,str,None] = None, param:dict = {}, order_by:dict[str,str] = {}) -> Union[None,dict, list[dict]]:
+    def get(self, order_id: Union[int, str, None] = None, param: dict = {}, 
+            order_by: dict[str, str] = {}) -> Union[None, dict, list[dict]]:
 
         query = ''
         _real_param = {}
 
-        if not (id is None):
-            return (self.df.loc[id].to_dict() if id in self.df.index else None)
+        if not order_id is None:
+            return (self.df.loc[order_id].to_dict() if order_id in self.df.index else None)
         elif len(param.keys()):
 
             _p = []
@@ -49,9 +54,9 @@ class CSVBotStroe(IBotStore):
                     'value' : param[i]
                 }
  
-                if isinstance(param[i],list):
+                if isinstance(param[i], list):
                     _cd['operation'] = 'in'
-                elif isinstance(param[i],dict):
+                elif isinstance(param[i], dict):
                     _cd = param[i]
 
                 if 'raw' in _cd:
@@ -78,11 +83,12 @@ class CSVBotStroe(IBotStore):
         return order
 
 
-    def insert(self,order:dict, other_param:dict = {}, return_is_active:bool = True, modify_active:bool = True):
+    def insert(self, order: dict, other_param: dict = {},
+                return_is_active: bool = True, modify_active: bool = True):
         return self.__write(
                 is_insert = True, 
                 order = order, 
-                other_param=other_param,
+                other_param = other_param,
                 return_is_active = return_is_active,
                 modify_active = modify_active,
                 field_map = {
@@ -99,12 +105,13 @@ class CSVBotStroe(IBotStore):
             )
 
 
-    def update(self, id:Union[int,str,None], order:dict, other_param:dict = {}, return_is_active:bool = True, modify_active:bool = True) :
+    def update(self, order_id: Union[int, str, None], order: dict, other_param: dict = {},
+                return_is_active: bool = True, modify_active: bool = True):
         return self.__write(
                 is_insert = False, 
-                id = id,
+                order_id = order_id,
                 order = order, 
-                other_param=other_param,
+                other_param = other_param,
                 return_is_active = return_is_active,
                 modify_active = modify_active,
                 field_map = {
@@ -117,7 +124,9 @@ class CSVBotStroe(IBotStore):
                 }
             )
 
-    def __write(self, is_insert:bool, field_map:dict, order:dict = None, id:Union[int,str,None] = None, other_param:dict = {}, return_is_active:bool = True, modify_active:bool = True):
+    def __write(self, is_insert: bool, field_map: dict, order: dict = None,
+                order_id: Union[int, str, None] = None, other_param:dict = {},
+                return_is_active: bool = True, modify_active: bool = True):
 
         _order = { **other_param }
 
@@ -125,8 +134,8 @@ class CSVBotStroe(IBotStore):
             record = dict.fromkeys(self.df.columns)
             _order['create'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
             _order['active'] = 1
-        elif not (id is None):
-            record = self.get(id)
+        elif not order_id is None:
+            record = self.get(order_id)
             _order['update'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
         else:
             record = None
@@ -137,9 +146,16 @@ class CSVBotStroe(IBotStore):
         for i in field_map :
 
             if (i == 'real_create' or i == 'real_update') and (field_map[i] in order):
-                _order[i] = pd.to_datetime(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(int(order[field_map[i]]/1000))))
+                _order[i] = pd.to_datetime(
+                    time.strftime(
+                        '%Y-%m-%d %H:%M:%S',
+                        time.localtime(int(order[field_map[i]]/1000))
+                    )
+                )
             elif (i == 'update'):
-                _order[i] = pd.to_datetime(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime()))
+                _order[i] = pd.to_datetime(
+                    time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
+                )
             elif (field_map[i] in order):
                 _order[i] = order[field_map[i]]
 

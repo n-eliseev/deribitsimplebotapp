@@ -4,7 +4,7 @@ bot:
 
   order_label: 'dsb'
   
-  logger: 'derebit_bot'
+  logger: 'deribit_bot'
   
   auth:
     grant_type: 'client_credentials'
@@ -57,7 +57,7 @@ logging:
       <<: *db-cred
 
   loggers:
-    derebit_bot:
+    deribit_bot:
       handlers: [mysqldb, file]
 
   root:

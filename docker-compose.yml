@@ -2,11 +2,12 @@ version: '3'
 
 # Описание Docker контейнеров
 services:
-  
+
   # Контейнер с работающим ботом
   app:
     image: python:3.9.2
     container_name: deribit-bot-app
+    restart: always
     working_dir: /home/app
     environment:
       IS_DOCKER_CONTAINER: 1
@@ -25,7 +26,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: &mysql-rootpsw roothardpassword009911
-      MYSQL_DATABASE: derebit_bot
+      MYSQL_DATABASE: deribit_bot
       LANG: C.UTF-8
     command: ["--default-authentication-plugin=mysql_native_password", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     ports:
@@ -43,7 +44,7 @@ x-app:
   bot:
     url: wss://test.deribit.com/ws/api/v2
     order_label: dsb
-    logger: derebit_bot
+    logger: deribit_bot
     auth:
       grant_type: client_credentials
       client_id: 
@@ -65,7 +66,7 @@ x-app:
     user: root
     password: *mysql-rootpsw
     host: 'db'
-    database: 'derebit_bot'
+    database: 'deribit_bot'
     charset: 'utf8mb4'
     port: 3306
 
@@ -92,7 +93,7 @@ x-app:
         <<: *db-bot-cred
 
     loggers:
-      derebit_bot:
+      deribit_bot:
         handlers: [mysqldb, file]
 
     root:
